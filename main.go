@@ -46,7 +46,7 @@ func main() {
 	GenesisBlock := CreateBlock("Genesis", "")
 	chain.AddToChain(&GenesisBlock)
 
-	block1 := CreateBlock("Alice send 1 BTC to Bob", chain.LastHash)
+	block1 := CreateBlock("Alice sent 1 BTC to Bob", chain.LastHash)
 	chain.AddToChain(&block1)
 	for _, b := range chain.Chain {
 		b.Print()
