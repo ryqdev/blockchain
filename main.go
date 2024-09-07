@@ -36,9 +36,15 @@ func CreateChain() Blockchain {
 	return Blockchain{}
 }
 
-func (b *Blockchain) AddToChain(block *Block) {
-	b.Chain = append(b.Chain, block)
-	b.LastHash = block.Hash
+func (c *Blockchain) AddToChain(block *Block) {
+	c.Chain = append(c.Chain, block)
+	c.LastHash = block.Hash
+}
+
+func (c *Blockchain) Print() {
+	for _, b := range c.Chain {
+		b.Print()
+	}
 }
 
 func main() {
@@ -48,7 +54,6 @@ func main() {
 
 	block1 := CreateBlock("Alice sent 1 BTC to Bob", chain.LastHash)
 	chain.AddToChain(&block1)
-	for _, b := range chain.Chain {
-		b.Print()
-	}
+
+	chain.Print()
 }
