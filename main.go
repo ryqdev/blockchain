@@ -23,29 +23,29 @@ func NewProof(b *Block) *ProofOfWork {
 }
 
 type Block struct {
-	Data         string
-	Hash         string
-	PreviousHash string
+	Data         []byte
+	Hash         []byte
+	PreviousHash []byte
 }
 
 type Blockchain struct {
 	Chain    []*Block
-	LastHash string
+	LastHash []byte
 }
 
 func (b *Block) Print() {
-	fmt.Printf("Previous Hash: %x\n", b.PreviousHash)
+	fmt.Printf("Previous Hash: 0x%x\n", b.PreviousHash)
 	fmt.Printf("Data: %s\n", b.Data)
-	fmt.Printf("Hash: %x\n", b.Hash)
+	fmt.Printf("Hash: 0x%x\n", b.Hash)
 	fmt.Println("---------------------------------------")
 }
 
-func CreateBlock(data, previousHash string) Block {
-	hash := sha256.Sum256([]byte(data + previousHash))
+func CreateBlock(data string, previousHash []byte) Block {
+	hash := sha256.Sum256(append([]byte(data), previousHash...))
 	return Block{
-		data,
-		string(hash[:]),
-		string(previousHash),
+		[]byte(data),
+		hash[:],
+		previousHash,
 	}
 }
 
@@ -66,7 +66,7 @@ func (c *Blockchain) Print() {
 
 func main() {
 	chain := CreateChain()
-	GenesisBlock := CreateBlock("Genesis", "")
+	GenesisBlock := CreateBlock("Genesis", []byte{})
 	chain.AddToChain(&GenesisBlock)
 
 	block1 := CreateBlock("Alice sent 1 BTC to Bob", chain.LastHash)
