@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
+	"log"
+	"math"
 	"math/big"
 )
 
-const Difficulty = 5
+const Difficulty = 16
 
 type ProofOfWork struct {
 	Block  *Block
@@ -22,10 +26,52 @@ func NewProof(b *Block) *ProofOfWork {
 	}
 }
 
+func (p *ProofOfWork) Run() (int64, []byte) {
+	var nonce int64 = 0
+	var hash [32]byte
+	for nonce < math.MaxInt32 {
+		data := bytes.Join(
+			[][]byte{
+				p.Block.Data,
+				p.Block.PreviousHash,
+				int2Bytes(nonce),
+			},
+			[]byte{},
+		)
+		hash = sha256.Sum256(data)
+		fmt.Printf("\r0x%x", hash)
+		result := new(big.Int)
+		result.SetBytes(hash[:])
+		if result.Cmp(p.Target) == -1 {
+			break
+		} else {
+			nonce++
+		}
+	}
+	fmt.Println()
+	return nonce, hash[:]
+}
+
+func (p *ProofOfWork) validate() bool {
+	data := bytes.Join(
+		[][]byte{
+			p.Block.Data,
+			p.Block.PreviousHash,
+			int2Bytes(p.Block.Nonce),
+		},
+		[]byte{},
+	)
+	hash := sha256.Sum256(data)
+	result := new(big.Int)
+	result.SetBytes(hash[:])
+	return result.Cmp(p.Target) == -1
+}
+
 type Block struct {
 	Data         []byte
 	Hash         []byte
 	PreviousHash []byte
+	Nonce        int64
 }
 
 type Blockchain struct {
@@ -41,12 +87,16 @@ func (b *Block) Print() {
 }
 
 func CreateBlock(data string, previousHash []byte) Block {
-	hash := sha256.Sum256(append([]byte(data), previousHash...))
-	return Block{
-		[]byte(data),
-		hash[:],
-		previousHash,
+	block := Block{
+		Data:         []byte(data),
+		PreviousHash: previousHash,
 	}
+	pow := NewProof(&block)
+	nonce, hash := pow.Run()
+	block.Nonce = nonce
+	block.Hash = hash
+
+	return block
 }
 
 func CreateChain() Blockchain {
@@ -73,4 +123,14 @@ func main() {
 	chain.AddToChain(&block1)
 
 	chain.Print()
+}
+
+func int2Bytes(num int64) []byte {
+	buff := new(bytes.Buffer)
+	err := binary.Write(buff, binary.BigEndian, num)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return buff.Bytes()
 }
