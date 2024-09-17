@@ -33,7 +33,7 @@ func (p *ProofOfWork) Run() (int64, []byte) {
 		data := bytes.Join(
 			[][]byte{
 				p.Block.Data,
-				p.Block.PreviousHash,
+				p.Block.ParentHash,
 				int2Bytes(nonce),
 			},
 			[]byte{},
@@ -56,7 +56,7 @@ func (p *ProofOfWork) validate() bool {
 	data := bytes.Join(
 		[][]byte{
 			p.Block.Data,
-			p.Block.PreviousHash,
+			p.Block.ParentHash,
 			int2Bytes(p.Block.Nonce),
 		},
 		[]byte{},
@@ -68,10 +68,10 @@ func (p *ProofOfWork) validate() bool {
 }
 
 type Block struct {
-	Data         []byte
-	Hash         []byte
-	PreviousHash []byte
-	Nonce        int64
+	Data       []byte
+	Hash       []byte
+	ParentHash []byte
+	Nonce      int64
 }
 
 type Blockchain struct {
@@ -80,7 +80,7 @@ type Blockchain struct {
 }
 
 func (b *Block) Print() {
-	fmt.Printf("Previous Hash: 0x%x\n", b.PreviousHash)
+	fmt.Printf("Previous Hash: 0x%x\n", b.ParentHash)
 	fmt.Printf("Data: %s\n", b.Data)
 	fmt.Printf("Hash: 0x%x\n", b.Hash)
 	fmt.Println("---------------------------------------")
@@ -88,8 +88,8 @@ func (b *Block) Print() {
 
 func CreateBlock(data string, previousHash []byte) Block {
 	block := Block{
-		Data:         []byte(data),
-		PreviousHash: previousHash,
+		Data:       []byte(data),
+		ParentHash: previousHash,
 	}
 	pow := NewProof(&block)
 	nonce, hash := pow.Run()
